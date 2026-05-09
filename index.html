@@ -322,3 +322,255 @@
 </script>
 </body>
 </html>
+      background:none; border:none; color:var(--muted); font-family:'DM Sans',sans-serif;
+      font-size:0.75rem; font-weight:600; padding:0.55rem 0.75rem; cursor:pointer;
+      transition:background .15s,color .15s; white-space:nowrap;
+    }
+    .type-toggle button.active-play { background:rgba(0,229,160,0.2); color:var(--play-color); }
+    .type-toggle button.active-ref  { background:rgba(255,140,66,0.2); color:var(--ref-color); }
+    .btn-add {
+      background:var(--accent); border:none; color:#fff; font-family:'DM Sans',sans-serif;
+      font-size:0.85rem; font-weight:600; padding:0.55rem 1rem;
+      border-radius:8px; cursor:pointer; align-self:end; transition:opacity .15s;
+    }
+    .btn-add:hover { opacity:0.85; }
+    .reset-btn {
+      width:100%; margin-top:1.5rem; background:none; border:1px solid #ff555533;
+      color:#ff5555aa; font-family:'DM Sans',sans-serif; font-size:0.78rem;
+      padding:0.5rem; border-radius:8px; cursor:pointer; transition:border-color .15s,color .15s;
+    }
+    .reset-btn:hover { border-color:#ff5555; color:#ff5555; }
+
+    .schedule-section { max-width:700px; margin:2rem auto 4rem; padding:0 1rem; }
+    .section-label { font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:0.75rem; padding-left:0.25rem; }
+    .schedule-group { margin-bottom:2rem; }
+
+    .card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; padding:1rem 1.25rem; margin-bottom:0.5rem;
+      display:flex; align-items:center; gap:1rem; position:relative; transition:border-color .2s;
+    }
+    .card.is-next { border-color:var(--play-color); background:rgba(0,229,160,0.07); box-shadow:0 0 24px rgba(0,229,160,0.08); }
+    .card.is-next-ref { border-color:var(--ref-color); background:rgba(255,140,66,0.06); box-shadow:0 0 24px rgba(255,140,66,0.08); }
+    .card.past { opacity:0.35; }
+
+    .next-label {
+      position:absolute; top:-10px; left:14px;
+      background:var(--play-color); color:#0b0f1a;
+      font-size:0.6rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+      padding:0.2rem 0.55rem; border-radius:99px;
+    }
+    .next-label.ref { background:var(--ref-color); }
+
+    .time-block { text-align:center; min-width:58px; }
+    .time-block .hour { font-family:'Bebas Neue',sans-serif; font-size:1.9rem; letter-spacing:0.02em; line-height:1; }
+    .card.play .time-block .hour { color:var(--play-color); }
+    .card.ref  .time-block .hour { color:var(--ref-color); }
+
+    .divider-v { width:1px; height:40px; background:var(--border); flex-shrink:0; }
+
+    .card-info { flex:1; min-width:0; }
+    .card-meta {
+      font-size:0.65rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+      margin-bottom:0.2rem; display:flex; align-items:center; gap:0.5rem;
+    }
+    .card.play .card-meta { color:var(--play-dim); }
+    .card.ref  .card-meta { color:var(--ref-dim); }
+    .card-meta .num { font-family:'Bebas Neue',sans-serif; font-size:0.8rem; opacity:0.55; }
+    .card-meta .terrain-pill {
+      margin-left:auto; background:var(--surface2); border:1px solid var(--border);
+      font-family:'Bebas Neue',sans-serif; font-size:0.85rem; letter-spacing:0.06em;
+      padding:0.05rem 0.5rem; border-radius:6px; color:var(--text);
+    }
+    .card-detail { font-size:0.9rem; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .btn-delete {
+      background:none; border:none; color:var(--muted); font-size:1rem;
+      cursor:pointer; padding:0.3rem; border-radius:6px;
+      transition:color .15s,background .15s; flex-shrink:0;
+    }
+    .btn-delete:hover { color:#ff5555; background:rgba(255,85,85,0.1); }
+    .empty-state { text-align:center; color:var(--muted); font-size:0.85rem; padding:2rem 1rem; border:1px dashed var(--border); border-radius:12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="tourney-label">24H Volley Don Bosco Tournai 2026</div>
+  <div class="team-name-display">Les loulous de l'ulb</div>
+  <div class="next-badge"><span class="dot"></span> Prochain créneau surligné automatiquement</div>
+</header>
+
+<div class="edit-section">
+  <button class="edit-toggle" id="editToggle" onclick="toggleEdit()">
+    <span>✏️ Modifier le planning</span>
+    <span class="arrow">▼</span>
+  </button>
+  <div class="edit-panel" id="editPanel">
+    <h3>Ajouter un créneau</h3>
+    <div class="add-row">
+      <div>
+        <label>Heure</label>
+        <input type="time" id="inputTime" class="field" />
+      </div>
+      <div>
+        <label>Terrain</label>
+        <input type="text" id="inputTerrain" class="field" placeholder="ex: T4" />
+      </div>
+      <div class="type-toggle">
+        <button id="btnPlay" class="active-play" onclick="setType('play')">Joue</button>
+        <button id="btnRef" onclick="setType('ref')">Arbitre</button>
+      </div>
+      <button class="btn-add" onclick="addSlot()">+ Ajouter</button>
+    </div>
+    <div class="field-group">
+      <label>Adversaire / info (optionnel)</label>
+      <input type="text" id="inputLabel" class="field" placeholder="ex: vs Les chipies" />
+    </div>
+    <button class="reset-btn" onclick="resetToDefault()">↺ Remettre le planning d'origine (Don Bosco 2026)</button>
+  </div>
+</div>
+
+<div class="schedule-section">
+  <div class="schedule-group">
+    <div class="section-label" id="playLabel">🏐 Matchs à jouer</div>
+    <div id="playList"></div>
+  </div>
+  <div class="schedule-group">
+    <div class="section-label" id="refLabel">📋 Arbitrages</div>
+    <div id="refList"></div>
+  </div>
+</div>
+
+<script>
+  const DEFAULT_SLOTS = [
+    // ── MATCHS ──
+    { id:1,  time:'10:20', terrain:'T4', type:'play', label:'vs Les tours jumelles' },
+    { id:2,  time:'11:40', terrain:'T5', type:'play', label:'vs Hernie et ses drôles de gars' },
+    { id:3,  time:'12:40', terrain:'T4', type:'play', label:'vs Les moutons enragés' },
+    { id:4,  time:'14:00', terrain:'T4', type:'play', label:'vs Les loulou' },
+    { id:5,  time:'15:20', terrain:'T4', type:'play', label:'vs Affond ou à fond' },
+    { id:6,  time:'16:20', terrain:'T5', type:'play', label:'vs Les chipies' },
+    { id:7,  time:'17:20', terrain:'T4', type:'play', label:'vs Telari' },
+    { id:8,  time:'18:00', terrain:'T5', type:'play', label:'vs Les tuches' },
+    { id:9,  time:'18:40', terrain:'T6', type:'play', label:'vs Fun ouille' },
+    { id:10, time:'20:00', terrain:'T4', type:'play', label:'vs Pas discret du tout' },
+    { id:11, time:'22:20', terrain:'T6', type:'play', label:'vs Les français' },
+    { id:12, time:'01:40', terrain:'T4', type:'play', label:'vs Les éclopés Mouscronnois' },
+    { id:13, time:'02:40', terrain:'T5', type:'play', label:'vs Jaune et cie partie 2' },
+    { id:14, time:'03:40', terrain:'T5', type:'play', label:'vs EL Mariachi Loco' },
+    { id:15, time:'05:00', terrain:'T6', type:'play', label:'vs Les omelettes' },
+    { id:16, time:'07:40', terrain:'T5', type:'play', label:'vs Baudour P3' },
+    { id:17, time:'08:40', terrain:'T5', type:'play', label:'vs Skyjo' },
+    // ── ARBITRAGES ──
+    { id:18, time:'13:20', terrain:'T6', type:'ref', label:'Pas discret du tout / Hernie et ses drôles de gars' },
+    { id:19, time:'20:40', terrain:'T5', type:'ref', label:'Telari / Les chipies' },
+    { id:20, time:'21:00', terrain:'T5', type:'ref', label:'Fun ouille / Pas discret du tout' },
+    { id:21, time:'21:00', terrain:'T6', type:'ref', label:'Les tuches / Baudour P3' },
+    { id:22, time:'23:00', terrain:'T4', type:'ref', label:'Hernie et ses drôles de gars / Les omelettes' },
+    { id:23, time:'04:20', terrain:'T4', type:'ref', label:'Jaune et cie partie 2 / Baudour P3' },
+    { id:24, time:'05:40', terrain:'T4', type:'ref', label:'Les éclopés Mouscronnois / Hernie et ses drôles de gars' },
+    { id:25, time:'09:20', terrain:'T4', type:'ref', label:'Les moutons enragés / Les tours jumelles' },
+    { id:26, time:'09:20', terrain:'T5', type:'ref', label:'Jaune et cie partie 2 / Fun ouille' },
+  ];
+
+  let slots   = JSON.parse(localStorage.getItem('tournoi_loulous_v1') || 'null');
+  if (!slots) { slots = DEFAULT_SLOTS.map(s=>({...s})); save(); }
+  let nextId  = Math.max(...slots.map(s=>s.id), 100) + 1;
+  let currentType = 'play';
+
+  function save() { localStorage.setItem('tournoi_loulous_v1', JSON.stringify(slots)); }
+
+  function resetToDefault() {
+    if (!confirm('Remettre le planning Don Bosco 2026 ? Les modifications seront perdues.')) return;
+    slots = DEFAULT_SLOTS.map(s=>({...s}));
+    save(); render();
+  }
+
+  function toggleEdit() {
+    document.getElementById('editPanel').classList.toggle('open');
+    document.getElementById('editToggle').classList.toggle('open');
+  }
+
+  function setType(t) {
+    currentType = t;
+    document.getElementById('btnPlay').className = t==='play'?'active-play':'';
+    document.getElementById('btnRef').className  = t==='ref' ?'active-ref' :'';
+  }
+
+  function addSlot() {
+    const time    = document.getElementById('inputTime').value;
+    const terrain = document.getElementById('inputTerrain').value.trim();
+    const label   = document.getElementById('inputLabel').value.trim();
+    if (!time || !terrain) { alert('Remplis l\'heure et le terrain !'); return; }
+    slots.push({ id: nextId++, time, terrain, type: currentType, label });
+    save(); render();
+    ['inputTime','inputTerrain','inputLabel'].forEach(id => document.getElementById(id).value='');
+  }
+
+  function deleteSlot(id) {
+    if (!confirm('Supprimer ce créneau ?')) return;
+    slots = slots.filter(s=>s.id!==id);
+    save(); render();
+  }
+
+  // Overnight-aware time → minutes (before 10h = next day in a 24h tournament)
+  function toMin(t) {
+    const [h,m] = t.split(':').map(Number);
+    return (h < 10 ? h+24 : h)*60 + m;
+  }
+  function nowMin() {
+    const d=new Date(), h=d.getHours(), m=d.getMinutes();
+    return (h < 10 ? h+24 : h)*60 + m;
+  }
+
+  function render() {
+    const now = nowMin();
+    const allSorted = [...slots].sort((a,b)=>toMin(a.time)-toMin(b.time));
+    const nextSlot  = allSorted.find(s=>toMin(s.time)>=now);
+
+    ['play','ref'].forEach(type => {
+      const list = slots.filter(s=>s.type===type).sort((a,b)=>toMin(a.time)-toMin(b.time));
+      const el   = document.getElementById(type==='play'?'playList':'refList');
+      const lbl  = document.getElementById(type==='play'?'playLabel':'refLabel');
+
+      const emoji = type==='play'?'🏐':'📋';
+      const word  = type==='play'?'Matchs à jouer':'Arbitrages';
+      lbl.textContent = `${emoji} ${word} — ${list.length} créneaux`;
+
+      if (!list.length) { el.innerHTML=`<div class="empty-state">Aucun créneau.</div>`; return; }
+
+      let num=0;
+      el.innerHTML = list.map(s=>{
+        num++;
+        const past  = toMin(s.time)<now;
+        const isNext= nextSlot && s.id===nextSlot.id;
+        const refCls= type==='ref'?'ref':'';
+        const nextHtml = isNext?`<div class="next-label ${refCls}">⚡ Prochain</div>`:'';
+        const cardCls  = ['card',type,past?'past':'',isNext&&type==='play'?'is-next':'',isNext&&type==='ref'?'is-next-ref':''].filter(Boolean).join(' ');
+        const [hh,mm]  = s.time.split(':');
+        const typeLabel= type==='play'?'🏐 Match':'📋 Arbitrage';
+        return `
+        <div class="${cardCls}">
+          ${nextHtml}
+          <div class="time-block"><div class="hour">${hh}h${mm}</div></div>
+          <div class="divider-v"></div>
+          <div class="card-info">
+            <div class="card-meta">
+              <span>${typeLabel}</span>
+              <span class="num">#${num}</span>
+              <span class="terrain-pill">${s.terrain}</span>
+            </div>
+            <div class="card-detail">${s.label||'<span style="opacity:0.4">—</span>'}</div>
+          </div>
+          <button class="btn-delete" onclick="deleteSlot(${s.id})" title="Supprimer">✕</button>
+        </div>`;
+      }).join('');
+    });
+  }
+
+  render();
+  setInterval(render, 30000);
+</script>
+</body>
+</html>
